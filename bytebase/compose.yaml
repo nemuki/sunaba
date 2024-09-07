@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16.4-bookworm
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    volumes:
+      - type: volume
+        source: postgres-data
+        target: /var/lib/postgresql/data
+
+  bytebase:
+    image: bytebase/bytebase:2.22.3
+    ports:
+      - mode: host
+        target: 8080
+        published: 8080
+    volumes:
+      - type: volume
+        source: bytebase-data
+        target: /var/opt/bytebase
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:
+    driver: local
+  bytebase-data:
+    driver: local
