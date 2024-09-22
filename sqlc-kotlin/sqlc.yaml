@@ -1,0 +1,15 @@
+version: '2'
+plugins:
+  - name: kt
+    wasm:
+      url: https://downloads.sqlc.dev/plugin/sqlc-gen-kotlin_1.2.0.wasm
+      sha256: 22b437ecaea66417bbd3b958339d9868ba89368ce542c936c37305acf373104b
+sql:
+  - schema: src/main/resources/sql/sandbox/table.sql
+    queries: src/main/resources/sql/sandbox/query.sql
+    engine: postgresql
+    codegen:
+      - out: src/main/kotlin/dev/nemuki/infra/repository/mapper/sandbox
+        plugin: kt
+        options:
+          package: dev.nemuki.infra.repository.mapper.sandbox
