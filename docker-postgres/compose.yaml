@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16.2-bookworm
+    environment:
+      POSTGRES_USER: sunaba
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sunaba
+    ports:
+      - host_ip: 127.0.0.1
+        published: 5432
+        target: 5432
+    volumes:
+      - type: volume
+        source: postgres-data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./init-data/
+        target: /docker-entrypoint-initdb.d/
+
+volumes:
+  postgres-data:
+    driver: local
