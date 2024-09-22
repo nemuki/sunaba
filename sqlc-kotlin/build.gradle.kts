@@ -10,6 +10,8 @@ repositories {
 }
 
 dependencies {
+    runtimeOnly("org.postgresql:postgresql:42.7.2")
+
     testImplementation(kotlin("test"))
 }
 
