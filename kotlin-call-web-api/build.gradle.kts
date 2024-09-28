@@ -1,6 +1,5 @@
 plugins {
     kotlin("jvm") version "2.0.20"
-    id("java")
 }
 
 group = "dev.nemuki"
@@ -17,6 +16,7 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
