@@ -21,6 +21,9 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    implementation(platform((libs.okhttp.bom)))
+    implementation(libs.okhttp)
+
     testImplementation(kotlin("test"))
 }
 
