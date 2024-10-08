@@ -11,7 +11,7 @@ services:
         target: /var/lib/postgresql/data
 
   bytebase:
-    image: bytebase/bytebase:2.22.3
+    image: bytebase/bytebase:2.23.1
     ports:
       - mode: host
         target: 8080
