@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: spring-grpc-kotlin-sample
+  security:
+    oauth2:
+      resourceserver:
+        opaquetoken:
+          introspection-uri: ${OAUTH2_INTROSPECTION_URI}
+          client-id: ${OAUTH2_CLIENT_ID}
+          client-secret: ${OAUTH2_CLIENT_SECRET}
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
