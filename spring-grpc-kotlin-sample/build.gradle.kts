@@ -27,7 +27,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     implementation("io.grpc:grpc-services")
