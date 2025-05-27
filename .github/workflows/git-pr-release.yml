@@ -28,6 +28,7 @@ jobs:
         id: create-pr
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Release PR"
           source_branch: main
           target_branch: release
 
