@@ -35,6 +35,7 @@ jobs:
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
 
-      - run: gh pr comment ${{ steps.git-pr-release.outputs.pr }} --body "Hi from GitHub CLI"
+      - run: gh pr comment $PR_URL --body "Hi from GitHub CLI"
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ steps.git-pr-release.outputs.pr }}
