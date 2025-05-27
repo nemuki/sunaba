@@ -21,7 +21,7 @@ repositories {
     mavenCentral()
 }
 
-extra["springGrpcVersion"] = "0.4.0"
+extra["springGrpcVersion"] = "0.8.0"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
