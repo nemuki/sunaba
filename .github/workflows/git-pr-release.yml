@@ -25,7 +25,9 @@ jobs:
 
       - run: gem install --no-document git-pr-release
 
-      - run: echo "pr=$(git-pr-release --squashed | grep '^Updated pull request:' | awk '{print $4}')" >> $GITHUB_OUTPUT
+      - run: |
+          git-pr-release --squashed > git-pr-release.log
+          echo "pr=$(cat git-pr-release.log | grep '^Updated pull request:' | awk '{print $4}')" >> $GITHUB_OUTPUT
         id: git-pr-release
         env:
           GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
