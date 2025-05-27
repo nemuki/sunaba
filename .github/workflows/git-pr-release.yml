@@ -1,0 +1,31 @@
+# Original: https://songmu.jp/riji/entry/2022-08-05-git-pr-release.html
+---
+name: git-pr-release
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  git-pr-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # git-pr-release needs the git histories
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+
+      - run: gem install --no-document git-pr-release
+
+      - run: git-pr-release --squashed --json
+        env:
+          GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_PR_RELEASE_BRANCH_PRODUCTION: release
+          GIT_PR_RELEASE_BRANCH_STAGING: main
+          GIT_PR_RELEASE_LABELS: pr-release
+          # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
+          TZ: Asia/Tokyo
