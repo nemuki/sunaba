@@ -1,0 +1,19 @@
+{
+  "name": "mcp-uuid",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "mcp-uuid": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "^5.8.3"
+  }
+}
