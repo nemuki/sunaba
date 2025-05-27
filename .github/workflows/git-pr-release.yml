@@ -19,6 +19,10 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # git-pr-release needs the git histories
+
       - name: Run the Action
         uses: devops-infra/action-pull-request@master
         id: create-pr
