@@ -5,7 +5,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
-    id("com.google.protobuf") version "0.9.4"
+    id("com.google.protobuf") version "0.9.5"
 }
 
 group = "dev.nemuki"
@@ -21,7 +21,7 @@ repositories {
     mavenCentral()
 }
 
-extra["springGrpcVersion"] = "0.4.0"
+extra["springGrpcVersion"] = "0.8.0"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
