@@ -19,29 +19,15 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Run the Action
+        uses: devops-infra/action-pull-request@master
+        id: create-pr
         with:
-          fetch-depth: 0 # git-pr-release needs the git histories
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.1
-
-      - run: gem install --no-document git-pr-release
-
-      - run: git-pr-release --squashed > git-pr-release.log 2>&1
-        env:
-          GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_PR_RELEASE_BRANCH_PRODUCTION: release
-          GIT_PR_RELEASE_BRANCH_STAGING: main
-          GIT_PR_RELEASE_LABELS: pr-release
-          # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
-          TZ: Asia/Tokyo
-
-      - run: echo "pr=$(tail --color=never -n 1 git-pr-release.log | awk '{print $4}')" >> $GITHUB_OUTPUT
-        id: git-pr-release
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: main
+          target_branch: release
 
       - run: gh pr comment $PR_URL --body "Hi from GitHub CLI"
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_URL: ${{ steps.git-pr-release.outputs.pr }}
+          PR_URL: ${{ steps.create-pr.outputs.url }}
