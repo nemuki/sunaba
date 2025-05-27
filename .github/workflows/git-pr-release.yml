@@ -25,7 +25,7 @@ jobs:
 
       - run: gem install --no-document git-pr-release
 
-      - run: echo "pr=$(git-pr-release --squashed)" >> $GITHUB_OUTPUT
+      - run: echo "pr=$(git-pr-release --squashed | grep '^Updated pull request:' | awk '{print $4}')" >> $GITHUB_OUTPUT
         id: git-pr-release
         env:
           GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,3 +36,5 @@ jobs:
           TZ: Asia/Tokyo
 
       - run: gh pr comment ${{ steps.git-pr-release.outputs.pr }} --body "Hi from GitHub CLI"
+        env:
+          GH_TOKEN: ${{ github.token }}
