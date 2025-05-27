@@ -38,7 +38,7 @@ jobs:
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
 
-      - run: echo "pr=$(cat git-pr-release.log | grep '^Updated pull request:' | awk '{print $4}')" >> $GITHUB_OUTPUT
+      - run: echo "pr=$(tail -n 1 git-pr-release.log | awk '{print $4}')" >> $GITHUB_OUTPUT
         id: git-pr-release
 
       - run: gh pr comment $PR_URL --body "Hi from GitHub CLI"
