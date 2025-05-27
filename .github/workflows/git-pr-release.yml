@@ -29,7 +29,7 @@ jobs:
 
       - run: gem install --no-document git-pr-release
 
-      - run: git-pr-release --squashed > git-pr-release.log
+      - run: git-pr-release --squashed > git-pr-release.log 2>&1
         env:
           GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GIT_PR_RELEASE_BRANCH_PRODUCTION: release
@@ -37,9 +37,8 @@ jobs:
           GIT_PR_RELEASE_LABELS: pr-release
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
-          TERM: dumb
 
-      - run: echo "pr=$(tail -n 1 git-pr-release.log | awk '{print $4}')" >> $GITHUB_OUTPUT
+      - run: echo "pr=$(tail --color=never -n 1 git-pr-release.log | awk '{print $4}')" >> $GITHUB_OUTPUT
         id: git-pr-release
 
       - run: gh pr comment $PR_URL --body "Hi from GitHub CLI"
