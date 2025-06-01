@@ -37,6 +37,8 @@ jobs:
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
         run: |
+          set -x
+
           output=$(git-pr-release --squashed 2>&1)
           echo "$output"
           pr_url=$(echo "$output" | grep "Updated pull request:" | sed 's/.*Updated pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
@@ -67,21 +69,24 @@ jobs:
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
         run: |
-          output_v2=$(git-pr-release --squashed 2>&1)
-          echo "$output_v2"
+          set -x
+
+          output=$(git-pr-release --squashed 2>&1)
+          echo "$output"
           pr_url=$(echo "$output" | grep "Updated pull request:" | sed 's/.*Updated pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
           if [ -n "$pr_url" ]; then
-            echo "PR_URL_RELEASE_V2=$pr_url" >> $GITHUB_ENV
+            echo "PR_URL_RELEASE=$pr_url" >> $GITHUB_ENV
             echo "Found PR URL: $pr_url"
           else
             echo "No PR URL found in output"
           fi
 
-      - run: gh pr comment "$PR_URL_RELEASE_V2" --body "Hi from GitHub CLI"
-        if: env.PR_URL_RELEASE_V2 != ''
+      - run: gh pr comment "$PR_URL_RELEASE" --body "Hi from GitHub CLI"
+        if: env.PR_URL_RELEASE != ''
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - run: gh pr view "$PR_URL_RELEASE_V2"
+      - run: gh pr view "$PR_URL_RELEASE"
+        if: env.PR_URL_RELEASE != ''
         env:
           GH_TOKEN: ${{ github.token }}
