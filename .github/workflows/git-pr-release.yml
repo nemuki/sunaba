@@ -40,11 +40,9 @@ jobs:
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
         run: |
-          set -x
-
           output=$(git-pr-release --squashed 2>&1)
           echo "$output"
-          pr_url=$(echo "$output" | grep "Updated pull request:" | sed 's/.*Updated pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
+          pr_url=$(echo "$output" | grep "pull request:" | sed 's/.* pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
           if [ -n "$pr_url" ]; then
             echo "PR_URL_RELEASE=$pr_url" >> $GITHUB_ENV
             echo "Found PR URL: $pr_url"
@@ -72,11 +70,9 @@ jobs:
           # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
           TZ: Asia/Tokyo
         run: |
-          set -x
-
           output=$(git-pr-release --squashed 2>&1)
           echo "$output"
-          pr_url=$(echo "$output" | grep "Updated pull request:" | sed 's/.*Updated pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
+          pr_url=$(echo "$output" | grep "pull request:" | sed 's/.* pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
           if [ -n "$pr_url" ]; then
             echo "PR_URL_RELEASE=$pr_url" >> $GITHUB_ENV
             echo "Found PR URL: $pr_url"
