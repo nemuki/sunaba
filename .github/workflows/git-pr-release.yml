@@ -41,6 +41,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - run: gh pr view
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - run: git-pr-release --squashed
         env:
           GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,5 +54,9 @@ jobs:
           TZ: Asia/Tokyo
 
       - run: gh pr comment --body "Hi from GitHub CLI"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - run: gh pr view
         env:
           GH_TOKEN: ${{ github.token }}
