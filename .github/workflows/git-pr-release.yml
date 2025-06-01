@@ -11,6 +11,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  THOR_SHELL: basic
+
 jobs:
   git-pr-release:
     runs-on: ubuntu-latest
