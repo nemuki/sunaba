@@ -12,7 +12,7 @@ defaults:
     shell: bash
 
 env:
-  THOR_SHELL: basic
+  THOR_SHELL: Basic
 
 jobs:
   git-pr-release:
