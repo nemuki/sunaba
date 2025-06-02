@@ -11,9 +11,6 @@ defaults:
   run:
     shell: bash
 
-env:
-  THOR_SHELL: Basic
-
 jobs:
   git-pr-release:
     runs-on: ubuntu-latest
@@ -28,5 +25,9 @@ jobs:
           repository: odanado/git-pr-release-go
 
       - run: git-pr-release-go --from main --to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: git-pr-release-go --from main --to release-v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
