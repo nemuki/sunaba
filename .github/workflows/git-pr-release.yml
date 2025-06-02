@@ -25,7 +25,7 @@ jobs:
           repository: odanado/git-pr-release-go
 
       - run: |
-          output=$(git-pr-release-go  --from main --to release)
+          output=$(git-pr-release-go  --from main --to release 2>&1)
 
           echo "$output"
 
