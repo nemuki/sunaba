@@ -32,13 +32,17 @@ jobs:
 
           echo "$last_line"
 
-          if [ "$last_line" =~ "Created new a pull request." ]; then
-            echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
-          elif [ "$last_line" =~ "The pull request already exists." ]; then
-            echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
-          else
-            echo "PR_NUMBER=" >> $GITHUB_ENV
-          fi
+          case "$last_line" in
+            *"Created new a pull request."*)
+              echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
+              ;;
+            *"The pull request already exists."*)
+              echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "PR_NUMBER=" >> $GITHUB_ENV
+              ;;
+          esac
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
