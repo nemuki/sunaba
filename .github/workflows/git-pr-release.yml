@@ -28,13 +28,14 @@ jobs:
           set -x
 
           output=$(git-pr-release-go --from main --to release 2>&1)
+          last_line=$(echo "$output" | tail -n 1)
 
-          echo "$output"
+          echo "$last_line"
 
-          if [ "$output" =~ "Created new a pull request." ]; then
-            echo "PR_NUMBER=$(echo "$output" | grep -oP '\d+$')" >> $GITHUB_ENV
-          elif [ "$output" =~ "The pull request already exists." ]; then
-            echo "PR_NUMBER=$(echo "$output" | grep -oP '\d+$')" >> $GITHUB_ENV
+          if [ "$last_line" =~ "Created new a pull request." ]; then
+            echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
+          elif [ "$last_line" =~ "The pull request already exists." ]; then
+            echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
           else
             echo "PR_NUMBER=" >> $GITHUB_ENV
           fi
