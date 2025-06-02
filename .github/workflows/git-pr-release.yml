@@ -25,15 +25,15 @@ jobs:
           repository: odanado/git-pr-release-go
 
       - run: |
-          output=$(git-pr-release-go  --from main --to release 2>&1)
+          set -x
+
+          output=$(git-pr-release-go --from main --to release 2>&1)
 
           echo "$output"
 
-          # git-pr-release-go: Created new a pull request. 42
-          # git-pr-release-go: The pull request already exists. The body was updated. 40
-          if [[ "$output" =~ "Created new a pull request." ]]; then
+          if [ "$output" =~ "Created new a pull request." ]; then
             echo "PR_NUMBER=$(echo "$output" | grep -oP '\d+$')" >> $GITHUB_ENV
-          elif [[ "$output" =~ "The pull request already exists." ]]; then
+          elif [ "$output" =~ "The pull request already exists." ]; then
             echo "PR_NUMBER=$(echo "$output" | grep -oP '\d+$')" >> $GITHUB_ENV
           else
             echo "PR_NUMBER=" >> $GITHUB_ENV
