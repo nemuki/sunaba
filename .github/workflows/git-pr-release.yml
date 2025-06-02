@@ -1,0 +1,55 @@
+# Original: https://songmu.jp/riji/entry/2022-08-05-git-pr-release.html
+---
+name: git-pr-release
+
+on:
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  git-pr-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Setup git-pr-release-go
+        uses: odanado/setup-release@v0
+        with:
+          repository: odanado/git-pr-release-go
+
+      - name: Run git-pr-release-go
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+
+          output=$(git-pr-release-go --from main --to release --template .github/git-pr-release.mustache 2>&1)
+          last_line=$(echo "$output" | tail -n 1)
+          echo "$last_line"
+
+          case "$last_line" in
+            # git-pr-release-go: Created new a pull request. 42
+            *"Created new a pull request."*)
+              echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
+              ;;
+            # git-pr-release-go: The pull request already exists. The body was updated. 40
+            *"The pull request already exists. The body was updated."*)
+              echo "PR_NUMBER=$(echo "$last_line" | grep -oP '\d+$')" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "PR_NUMBER=" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Comment on the pull request
+        if: env.PR_NUMBER != ''
+        run: |
+          gh pr comment ${{ env.PR_NUMBER }} \
+            --body "This pull request was created by [git-pr-release-go]"
