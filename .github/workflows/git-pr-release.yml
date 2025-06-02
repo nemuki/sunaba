@@ -22,70 +22,11 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Setup git-pr-release-go
+        uses: odanado/setup-release@v0
         with:
-          fetch-depth: 0 # git-pr-release needs the git histories
+          repository: odanado/git-pr-release-go
 
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.1
-
-      - run: gem install --no-document git-pr-release
-
-      - name: Run git-pr-release for release branch
+      - run: git-pr-release-go --from main --to release
         env:
-          GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_PR_RELEASE_BRANCH_PRODUCTION: release
-          GIT_PR_RELEASE_BRANCH_STAGING: main
-          # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
-          TZ: Asia/Tokyo
-        run: |
-          output=$(git-pr-release --squashed 2>&1)
-          echo "$output"
-          pr_url=$(echo "$output" | grep "pull request:" | sed 's/.* pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
-          if [ -n "$pr_url" ]; then
-            echo "PR_URL_RELEASE=$pr_url" >> $GITHUB_ENV
-            echo "Found PR URL: $pr_url"
-          else
-            echo "No PR URL found in output"
-          fi
-
-      - name: Comment on release PR
-        if: env.PR_URL_RELEASE != ''
-        run: gh pr comment "$PR_URL_RELEASE" --body "Hi from GitHub CLI"
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: View release PR
-        if: env.PR_URL_RELEASE != ''
-        run: gh pr view "$PR_URL_RELEASE"
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Run git-pr-release for release-v2 branch
-        env:
-          GIT_PR_RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_PR_RELEASE_BRANCH_PRODUCTION: release-v2
-          GIT_PR_RELEASE_BRANCH_STAGING: main
-          # GIT_PR_RELEASE_TEMPLATE: .github/git-pr-release.erb
-          TZ: Asia/Tokyo
-        run: |
-          output=$(git-pr-release --squashed 2>&1)
-          echo "$output"
-          pr_url=$(echo "$output" | grep "pull request:" | sed 's/.* pull request: //' | sed 's/\x1b\[[0-9;]*m//g' | tr -d ' ')
-          if [ -n "$pr_url" ]; then
-            echo "PR_URL_RELEASE=$pr_url" >> $GITHUB_ENV
-            echo "Found PR URL: $pr_url"
-          else
-            echo "No PR URL found in output"
-          fi
-
-      - run: gh pr comment "$PR_URL_RELEASE" --body "Hi from GitHub CLI"
-        if: env.PR_URL_RELEASE != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - run: gh pr view "$PR_URL_RELEASE"
-        if: env.PR_URL_RELEASE != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
