@@ -9,7 +9,7 @@ app.get('/', (c) => {
   return c.render(
     <div class="container">
       <h1>調整さん iCal 変換</h1>
-      <p>調整さんのURLと名前を入力して、iCal形式で予定を取得できます。</p>
+      <p>調整さんのURLと名前、またはCSVデータを入力して、iCal形式で予定を取得できます。</p>
       
       <form class="input-form" id="chouseisan-form" novalidate>
         <div class="form-group">
@@ -19,7 +19,6 @@ app.get('/', (c) => {
             id="url" 
             name="url" 
             placeholder="https://chouseisan.com/s?h=..." 
-            required 
             pattern="https?://chouseisan\.com/s\?h=[a-f0-9]+"
             title="正しい調整さんのURL形式を入力してください。"
           />
@@ -33,11 +32,23 @@ app.get('/', (c) => {
             id="name" 
             name="name" 
             placeholder="例: Bさん" 
-            required 
             maxlength="50"
             title="名前は50文字以内で入力してください。"
           />
           <div class="error-message" id="name-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="csv-data">CSVデータ（調整さんからダウンロード）:</label>
+          <textarea 
+            id="csv-data" 
+            name="csv-data" 
+            rows="8"
+            placeholder="ゆる飲み&#10;&#10;日程,Aさん,Bさん&#10;7/14(月) 19:00〜,◯,◯&#10;7/15(火) 19:00〜,◯,△&#10;7/16(水) 19:00〜,◯,×&#10;コメント,,"
+            title="調整さんからダウンロードしたCSVデータを貼り付けてください。"
+          ></textarea>
+          <div class="error-message" id="csv-data-error"></div>
+          <small class="helper-text">URLと名前の代わりに、調整さんからダウンロードしたCSVデータを貼り付けることもできます。</small>
         </div>
         
         <button type="submit" id="submit-btn">iCal生成</button>
