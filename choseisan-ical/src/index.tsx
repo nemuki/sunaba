@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
 import { parseChoseisanCSV } from './csvParser'
-import { generateICalForParticipant } from './icalGenerator'
+import { generateICalForParticipant, generateFilename } from './icalGenerator'
 
 const app = new Hono()
 
@@ -84,9 +84,12 @@ app.post('/api/generate-ical', async (c) => {
       scheduleData
     })
 
+    // Generate proper filename
+    const filename = generateFilename(url?.trim(), name.trim())
+
     return c.text(icalContent, 200, {
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${scheduleData.title}-${name.trim()}.ics"`
+      'Content-Disposition': `attachment; filename="${filename}"`
     })
   } catch (error) {
     console.error('iCal generation error:', error)

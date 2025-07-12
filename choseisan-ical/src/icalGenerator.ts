@@ -8,6 +8,36 @@ export interface ICalOptions {
   scheduleData: ScheduleData;
 }
 
+// Extract chouseisan ID from URL
+export function extractChouseisanId(url: string): string | null {
+  const match = url.match(/h=([a-f0-9]+)/);
+  return match ? match[1] : null;
+}
+
+// Generate filename based on chouseisan ID and participant name
+export function generateFilename(url: string | undefined, participantName: string): string {
+  if (url) {
+    const chouseisanId = extractChouseisanId(url);
+    if (chouseisanId) {
+      const base64Name = base64Encode(participantName);
+      return `${chouseisanId}-${base64Name}.ics`;
+    }
+  }
+  
+  // Fallback to base64 encoded participant name if no valid URL
+  const base64Name = base64Encode(participantName);
+  return `schedule-${base64Name}.ics`;
+}
+
+// Helper function to properly encode UTF-8 strings to base64
+function base64Encode(str: string): string {
+  // Convert string to UTF-8 bytes, then to base64
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(str);
+  const binaryString = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+  return btoa(binaryString);
+}
+
 export function generateICalForParticipant(options: ICalOptions): string {
   const { url, title, participantName, scheduleData } = options;
   

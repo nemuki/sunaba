@@ -259,6 +259,9 @@ function showSuccessWithDownload(filename: string, downloadUrl: string, webcalUr
   const successDiv = document.createElement("div");
   successDiv.className = "success-message";
   
+  // Create Google Calendar URL for direct import
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&cid=${encodeURIComponent(webcalUrl)}`;
+  
   successDiv.innerHTML = `
     <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 4px; margin-top: 20px;">
       <strong>✓ iCalファイルが生成されました！</strong><br>
@@ -267,11 +270,15 @@ function showSuccessWithDownload(filename: string, downloadUrl: string, webcalUr
       <div style="margin: 10px 0;">
         <a href="${downloadUrl}" download="${filename}" 
            style="background-color: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 10px;">
-          📥 iCalファイルをダウンロード
+          📥 iCalダウンロード
         </a>
       </div>
       
       <div style="margin: 10px 0;">
+        <a href="${googleCalendarUrl}" target="_blank" rel="noopener noreferrer"
+           style="background-color: #4285f4; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 10px;">
+          📅 Googleカレンダーに追加
+        </a>
         <button onclick="copyToClipboard('${webcalUrl}')" 
                 style="background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
           📋 カレンダーURL をコピー
@@ -279,10 +286,9 @@ function showSuccessWithDownload(filename: string, downloadUrl: string, webcalUr
       </div>
       
       <small style="color: #666;">
-        💡 <strong>Googleカレンダーに追加する方法:</strong><br>
-        1. 「カレンダーURL をコピー」ボタンでURLをコピー<br>
-        2. Googleカレンダーを開き、左側の「他のカレンダー」→「URLで追加」<br>
-        3. コピーしたURLを貼り付けて追加
+        💡 <strong>カレンダーに追加する方法:</strong><br>
+        1. 「Googleカレンダーに追加」ボタンで直接追加<br>
+        2. または「カレンダーURL をコピー」→ Googleカレンダーの「他のカレンダー」→「URLで追加」
       </small>
     </div>
   `;

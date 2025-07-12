@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateICalForParticipant } from '../src/icalGenerator'
+import { generateICalForParticipant, extractChouseisanId, generateFilename } from '../src/icalGenerator'
 import { parseChoseisanCSV } from '../src/csvParser'
 
 describe('icalGenerator', () => {
@@ -80,5 +80,34 @@ describe('icalGenerator', () => {
         scheduleData
       })
     }).toThrow('参加者「Cさん」が見つかりません')
+  })
+
+  it('should extract chouseisan ID from URL', () => {
+    expect(extractChouseisanId('https://chouseisan.com/s?h=02d742a89fd040959ebbf75e1514be62')).toBe('02d742a89fd040959ebbf75e1514be62')
+    expect(extractChouseisanId('https://chouseisan.com/s?h=abc123')).toBe('abc123')
+    expect(extractChouseisanId('https://other-site.com')).toBe(null)
+    expect(extractChouseisanId('invalid-url')).toBe(null)
+  })
+
+  it('should generate filename with chouseisan ID and base64 participant name', () => {
+    const url = 'https://chouseisan.com/s?h=02d742a89fd040959ebbf75e1514be62'
+    const participantName = 'Bさん'
+    const filename = generateFilename(url, participantName)
+    
+    expect(filename).toBe('02d742a89fd040959ebbf75e1514be62-QuOBleOCkw==.ics')
+  })
+
+  it('should generate fallback filename when no URL provided', () => {
+    const participantName = 'Bさん'
+    const filename = generateFilename(undefined, participantName)
+    
+    expect(filename).toBe('schedule-QuOBleOCkw==.ics')
+  })
+
+  it('should generate fallback filename when invalid URL provided', () => {
+    const participantName = 'Aさん'
+    const filename = generateFilename('invalid-url', participantName)
+    
+    expect(filename).toBe('schedule-QeOBleOCkw==.ics')
   })
 })
