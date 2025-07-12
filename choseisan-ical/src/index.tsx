@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
+import { parseChoseisanCSV } from './csvParser'
+import { generateICalForParticipant } from './icalGenerator'
 
 const app = new Hono()
 
@@ -55,6 +57,42 @@ app.get('/', (c) => {
       </form>
     </div>
   )
+})
+
+// API endpoint to generate iCal
+app.post('/api/generate-ical', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { url, name, csvData } = body
+
+    if (!name?.trim()) {
+      return c.json({ error: '名前を入力してください。' }, 400)
+    }
+
+    if (!csvData?.trim()) {
+      return c.json({ error: 'CSVデータを入力してください。' }, 400)
+    }
+
+    // Parse CSV data
+    const scheduleData = parseChoseisanCSV(csvData)
+    
+    // Generate iCal
+    const icalContent = generateICalForParticipant({
+      url: url?.trim() || undefined,
+      title: scheduleData.title,
+      participantName: name.trim(),
+      scheduleData
+    })
+
+    return c.text(icalContent, 200, {
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${scheduleData.title}-${name.trim()}.ics"`
+    })
+  } catch (error) {
+    console.error('iCal generation error:', error)
+    const message = error instanceof Error ? error.message : 'iCal生成中にエラーが発生しました。'
+    return c.json({ error: message }, 500)
+  }
 })
 
 export default app

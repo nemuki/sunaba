@@ -6,15 +6,19 @@
     "build": "vite build",
     "preview": "$npm_execpath run build && vite preview",
     "deploy": "$npm_execpath run build && wrangler deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "test": "vitest"
   },
   "dependencies": {
-    "hono": "^4.8.4"
+    "hono": "^4.8.4",
+    "ical-generator": "^9.0.0"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.2.3",
+    "@types/node": "^24.0.13",
     "vite": "^6.3.5",
     "vite-ssr-components": "^0.3.0",
+    "vitest": "^3.2.4",
     "wrangler": "^4.17.0"
   }
 }
