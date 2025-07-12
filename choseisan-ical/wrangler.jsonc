@@ -2,5 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "choseisan-ical",
   "compatibility_date": "2024-04-01",
-  "main": "./src/index.tsx"
+  "main": "./src/index.tsx",
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+    },
+  },
 }

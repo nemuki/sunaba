@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
+import { parseChoseisanCSV } from './csvParser'
+import { generateICalForParticipant, generateFilename } from './icalGenerator'
 
 const app = new Hono()
 
@@ -32,7 +34,7 @@ app.get('/', (c) => {
             id="name" 
             name="name" 
             placeholder="例: Bさん" 
-            maxlength="50"
+            maxLength={50}
             title="名前は50文字以内で入力してください。"
           />
           <div class="error-message" id="name-error"></div>
@@ -43,7 +45,7 @@ app.get('/', (c) => {
           <textarea 
             id="csv-data" 
             name="csv-data" 
-            rows="8"
+            rows={8}
             placeholder="ゆる飲み&#10;&#10;日程,Aさん,Bさん&#10;7/14(月) 19:00〜,◯,◯&#10;7/15(火) 19:00〜,◯,△&#10;7/16(水) 19:00〜,◯,×&#10;コメント,,"
             title="調整さんからダウンロードしたCSVデータを貼り付けてください。"
           ></textarea>
@@ -55,6 +57,45 @@ app.get('/', (c) => {
       </form>
     </div>
   )
+})
+
+// API endpoint to generate iCal
+app.post('/api/generate-ical', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { url, name, csvData } = body
+
+    if (!name?.trim()) {
+      return c.json({ error: '名前を入力してください。' }, 400)
+    }
+
+    if (!csvData?.trim()) {
+      return c.json({ error: 'CSVデータを入力してください。' }, 400)
+    }
+
+    // Parse CSV data
+    const scheduleData = parseChoseisanCSV(csvData)
+    
+    // Generate iCal
+    const icalContent = generateICalForParticipant({
+      url: url?.trim() || undefined,
+      title: scheduleData.title,
+      participantName: name.trim(),
+      scheduleData
+    })
+
+    // Generate proper filename
+    const filename = generateFilename(url?.trim(), name.trim())
+
+    return c.text(icalContent, 200, {
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`
+    })
+  } catch (error) {
+    console.error('iCal generation error:', error)
+    const message = error instanceof Error ? error.message : 'iCal生成中にエラーが発生しました。'
+    return c.json({ error: message }, 500)
+  }
 })
 
 export default app

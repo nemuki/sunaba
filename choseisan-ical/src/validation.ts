@@ -167,12 +167,156 @@ function handleFormSubmit(event: Event): void {
   if (!hasCustomErrors) {
     console.log("All validation passed");
     if (inputMode === 'csv') {
-      showSuccessMessage(inputMode, '', participantName, scheduleData);
+      generateICalFromData('', participantName, csvData.value);
     } else {
-      showSuccessMessage(inputMode, url.value, participantName, null);
+      // For URL mode, we still need CSV data, so show an error for now
+      showCustomError("csv-data", "現在はCSVデータモードのみサポートしています。調整さんからCSVをダウンロードして貼り付けてください。");
     }
   }
 }
+
+async function generateICalFromData(url: string, name: string, csvData: string): Promise<void> {
+  try {
+    // Show loading state
+    showLoadingMessage();
+
+    const response = await fetch('/api/generate-ical', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: url || undefined,
+        name: name,
+        csvData: csvData
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'iCal生成に失敗しました。');
+    }
+
+    // Get the iCal content
+    const icalContent = await response.text();
+    const filename = response.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] || 'schedule.ics';
+    
+    // Create download
+    const blob = new Blob([icalContent], { type: 'text/calendar' });
+    const downloadUrl = URL.createObjectURL(blob);
+    
+    // Create webcal URL for calendar apps
+    const webcalContent = icalContent;
+    const webcalBlob = new Blob([webcalContent], { type: 'text/calendar' });
+    const webcalUrl = URL.createObjectURL(webcalBlob);
+    
+    showSuccessWithDownload(filename, downloadUrl, webcalUrl, name);
+    
+  } catch (error) {
+    console.error('iCal generation failed:', error);
+    const message = error instanceof Error ? error.message : 'iCal生成中にエラーが発生しました。';
+    showCustomError("csv-data", message);
+    hideLoadingMessage();
+  }
+}
+
+function showLoadingMessage(): void {
+  // Remove existing messages
+  const existingSuccess = document.querySelector(".success-message");
+  const existingLoading = document.querySelector(".loading-message");
+  if (existingSuccess) existingSuccess.remove();
+  if (existingLoading) existingLoading.remove();
+
+  const loadingDiv = document.createElement("div");
+  loadingDiv.className = "loading-message";
+  loadingDiv.innerHTML = `
+    <div style="background-color: #cce5ff; border: 1px solid #99ccff; color: #0066cc; padding: 12px; border-radius: 4px; margin-top: 20px;">
+      <strong>⏳ iCalを生成中...</strong><br>
+      しばらくお待ちください。
+    </div>
+  `;
+
+  const form = document.querySelector(".input-form");
+  if (form) {
+    form.appendChild(loadingDiv);
+  }
+}
+
+function hideLoadingMessage(): void {
+  const existingLoading = document.querySelector(".loading-message");
+  if (existingLoading) {
+    existingLoading.remove();
+  }
+}
+
+function showSuccessWithDownload(filename: string, downloadUrl: string, webcalUrl: string, participantName: string): void {
+  // Remove existing messages
+  const existingSuccess = document.querySelector(".success-message");
+  const existingLoading = document.querySelector(".loading-message");
+  if (existingSuccess) existingSuccess.remove();
+  if (existingLoading) existingLoading.remove();
+
+  const successDiv = document.createElement("div");
+  successDiv.className = "success-message";
+  
+  // Create Google Calendar URL for direct import
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&cid=${encodeURIComponent(webcalUrl)}`;
+  
+  successDiv.innerHTML = `
+    <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 4px; margin-top: 20px;">
+      <strong>✓ iCalファイルが生成されました！</strong><br>
+      参加者: ${participantName}<br><br>
+      
+      <div style="margin: 10px 0;">
+        <a href="${downloadUrl}" download="${filename}" 
+           style="background-color: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 10px;">
+          📥 iCalダウンロード
+        </a>
+      </div>
+      
+      <div style="margin: 10px 0;">
+        <a href="${googleCalendarUrl}" target="_blank" rel="noopener noreferrer"
+           style="background-color: #4285f4; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-right: 10px;">
+          📅 Googleカレンダーに追加
+        </a>
+        <button onclick="copyToClipboard('${webcalUrl}')" 
+                style="background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+          📋 カレンダーURL をコピー
+        </button>
+      </div>
+      
+      <small style="color: #666;">
+        💡 <strong>カレンダーに追加する方法:</strong><br>
+        1. 「Googleカレンダーに追加」ボタンで直接追加<br>
+        2. または「カレンダーURL をコピー」→ Googleカレンダーの「他のカレンダー」→「URLで追加」
+      </small>
+    </div>
+  `;
+
+  const form = document.querySelector(".input-form");
+  if (form) {
+    form.appendChild(successDiv);
+  }
+}
+
+// Add global function for copy to clipboard
+(window as any).copyToClipboard = function(text: string): void {
+  navigator.clipboard.writeText(text).then(() => {
+    const button = event?.target as HTMLButtonElement;
+    if (button) {
+      const originalText = button.textContent;
+      button.textContent = '✓ コピーしました！';
+      button.style.backgroundColor = '#28a745';
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.style.backgroundColor = '#007bff';
+      }, 2000);
+    }
+  }).catch(err => {
+    console.error('コピーに失敗しました:', err);
+    alert('コピーに失敗しました。手動でURLをコピーしてください。');
+  });
+};
 
 function showSuccessMessage(mode: 'url' | 'csv', url: string, name: string, scheduleData: ScheduleData | null): void {
   // Remove existing success message
