@@ -34,7 +34,7 @@ app.get('/', (c) => {
             id="name" 
             name="name" 
             placeholder="例: Bさん" 
-            maxlength="50"
+            maxLength={50}
             title="名前は50文字以内で入力してください。"
           />
           <div class="error-message" id="name-error"></div>
@@ -45,7 +45,7 @@ app.get('/', (c) => {
           <textarea 
             id="csv-data" 
             name="csv-data" 
-            rows="8"
+            rows={8}
             placeholder="ゆる飲み&#10;&#10;日程,Aさん,Bさん&#10;7/14(月) 19:00〜,◯,◯&#10;7/15(火) 19:00〜,◯,△&#10;7/16(水) 19:00〜,◯,×&#10;コメント,,"
             title="調整さんからダウンロードしたCSVデータを貼り付けてください。"
           ></textarea>

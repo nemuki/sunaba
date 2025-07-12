@@ -57,14 +57,14 @@ export function generateICalForParticipant(options: ICalOptions): string {
     const eventDate = parseJapaneseDate(entry.date, entry.time);
     
     if (eventDate) {
-      calendar.createEvent({
+      const event = calendar.createEvent({
         start: eventDate,
         end: new Date(eventDate.getTime() + 2 * 60 * 60 * 1000), // Default 2 hours duration
         summary: title,
         description: url ? `調整さんURL: ${url}\n参加者: ${participantName}` : `調整さん: ${title}\n参加者: ${participantName}`,
-        location: '',
-        uid: `choseisan-${hashCode(url || title)}-${hashCode(entry.date + entry.time)}-${hashCode(participantName)}@choseisan-ical.local`
+        location: ''
       });
+      event.uid(`choseisan-${hashCode(url || title)}-${hashCode(entry.date + entry.time)}-${hashCode(participantName)}@choseisan-ical.local`);
     }
   });
   
