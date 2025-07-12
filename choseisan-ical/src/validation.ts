@@ -6,12 +6,17 @@ interface FormElements {
 }
 
 function getFormElements(): FormElements | null {
-  const url = document.getElementById('url') as HTMLInputElement;
-  const name = document.getElementById('name') as HTMLInputElement;
-  const form = document.getElementById('chouseisan-form') as HTMLFormElement;
+  const url = document.getElementById('url');
+  const name = document.getElementById('name');
+  const form = document.getElementById('chouseisan-form');
   
   if (!url || !name || !form) {
     console.error('Required form elements not found');
+    return null;
+  }
+  
+  if (!(url instanceof HTMLInputElement) || !(name instanceof HTMLInputElement) || !(form instanceof HTMLFormElement)) {
+    console.error('Form elements are not of the expected type');
     return null;
   }
   
