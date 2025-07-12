@@ -43,7 +43,8 @@ label {
 }
 
 input[type="url"],
-input[type="text"] {
+input[type="text"],
+textarea {
   width: 100%;
   padding: 12px;
   border: 2px solid #ddd;
@@ -51,17 +52,25 @@ input[type="text"] {
   font-size: 16px;
   transition: border-color 0.3s ease;
   box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 input[type="url"]:focus,
-input[type="text"]:focus {
+input[type="text"]:focus,
+textarea:focus {
   outline: none;
   border-color: #007bff;
 }
 
 input[type="url"]:invalid,
-input[type="text"]:invalid {
+input[type="text"]:invalid,
+textarea:invalid {
   border-color: #dc3545;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
 }
 
 .error-message {
@@ -92,4 +101,11 @@ button:hover {
 
 button:active {
   background-color: #004085;
+}
+
+.helper-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
 }
