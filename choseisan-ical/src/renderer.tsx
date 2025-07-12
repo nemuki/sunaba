@@ -7,7 +7,7 @@ export const renderer = jsxRenderer(({ children }) => {
       <head>
         <ViteClient />
         <Link href="/src/style.css" rel="stylesheet" />
-        <script type="module" src="/src/validation.js"></script>
+        <script type="module" src="/src/validation.ts"></script>
       </head>
       <body>{children}</body>
     </html>
