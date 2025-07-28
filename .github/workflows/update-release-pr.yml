@@ -1,0 +1,127 @@
+name: Update Release PR with Merged PRs
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+    branches:
+      - release
+      - release-v2
+  pull_request_target:
+    types: [opened, edited, synchronize] 
+    branches:
+      - release
+      - release-v2
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  update-release-pr:
+    runs-on: ubuntu-latest
+    # Only run for PRs from main to release branches
+    if: >
+      (github.head_ref == 'main' || startsWith(github.head_ref, 'main')) &&
+      (github.base_ref == 'release' || github.base_ref == 'release-v2')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Get merged PRs from develop branch
+        id: get-merged-prs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          echo "Fetching merged PRs from develop branch..."
+          
+          # Check if develop branch exists
+          if ! git show-ref --verify --quiet refs/remotes/origin/develop; then
+            echo "⚠️  develop branch not found. Using main branch as fallback."
+            DEVELOP_BRANCH="main"
+          else
+            DEVELOP_BRANCH="develop"
+          fi
+          
+          echo "Using branch: $DEVELOP_BRANCH"
+          
+          # Get the merge base between develop and release to find what's new
+          MERGE_BASE=$(git merge-base origin/$DEVELOP_BRANCH origin/${{ github.base_ref }} 2>/dev/null || echo "")
+          
+          if [ -z "$MERGE_BASE" ]; then
+            echo "No common history found. Using PRs from the last 30 days"
+            SINCE_DATE=$(date -d '30 days ago' --iso-8601)
+          else
+            # Get date of merge base
+            SINCE_DATE=$(git show -s --format=%ci $MERGE_BASE | cut -d' ' -f1)
+          fi
+          
+          echo "Looking for PRs since: $SINCE_DATE"
+          
+          # Get merged PRs using GitHub CLI
+          MERGED_PRS=$(gh pr list \
+            --state merged \
+            --base $DEVELOP_BRANCH \
+            --limit 50 \
+            --json number,title,author,mergedAt,url \
+            --jq '.[] | select(.mergedAt >= "'$SINCE_DATE'T00:00:00Z") | "- #\(.number) \(.title) (@\(.author.login)) - \(.mergedAt | strptime("%Y-%m-%dT%H:%M:%SZ") | strftime("%Y-%m-%d"))"' \
+            2>/dev/null || echo "")
+          
+          if [ -z "$MERGED_PRS" ]; then
+            MERGED_PRS="*最近のマージ済みPRはありません*"
+          fi
+          
+          # Save the result 
+          echo "MERGED_PRS<<EOF" >> $GITHUB_OUTPUT
+          echo "$MERGED_PRS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "Found merged PRs:"
+          echo "$MERGED_PRS"
+
+      - name: Update PR description
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          
+          # Get current PR description
+          CURRENT_BODY=$(gh pr view ${{ github.event.number }} --json body --jq '.body')
+          
+          # Create the merged PRs section
+          MERGED_PRS_SECTION="## developブランチからのマージ済みPR一覧
+          ${{ steps.get-merged-prs.outputs.MERGED_PRS }}"
+          
+          # Check if the placeholder exists
+          if echo "$CURRENT_BODY" | grep -q "<!-- MERGED_PRS_LIST -->"; then
+            echo "Updating existing merged PRs section..."
+            
+            # Replace the content between the markers
+            NEW_BODY=$(echo "$CURRENT_BODY" | sed '/<!-- MERGED_PRS_LIST -->/,/<!-- \/MERGED_PRS_LIST -->/c\
+          <!-- MERGED_PRS_LIST -->\
+          '"$MERGED_PRS_SECTION"'\
+          <!-- /MERGED_PRS_LIST -->')
+          else
+            echo "Adding merged PRs section to PR description..."
+            
+            # Add the section at the beginning of the body
+            NEW_BODY="$MERGED_PRS_SECTION
+
+          $CURRENT_BODY"
+          fi
+          
+          # Update the PR description
+          echo "$NEW_BODY" | gh pr edit ${{ github.event.number }} --body-file -
+          
+          echo "✅ PR description updated successfully!"
+
+      - name: Comment on PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.number }} \
+            --body "🤖 PRの説明欄にdevelopブランチからのマージ済みPR一覧を自動更新しました。"
