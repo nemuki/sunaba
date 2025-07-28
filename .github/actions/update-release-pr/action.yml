@@ -1,0 +1,163 @@
+name: 'Update Release PR with Merged PRs'
+description: 'Updates release PR description with list of merged PRs from head branch'
+inputs:
+  base-branch:
+    description: 'Base branch to compare against (e.g., release)'
+    required: true
+  head-branch:
+    description: 'Head branch to get PRs from (e.g., develop)'
+    required: true
+  exclude-labels:
+    description: 'Comma-separated list of labels to exclude (e.g., deploy,test)'
+    required: false
+    default: ''
+  pr-template-file-path:
+    description: 'Path to PR template file (e.g., ./.github/release-pr.md)'
+    required: false
+    default: './.github/pull_request_template.md'
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Get merged PRs from head branch not in base branch
+      id: get-merged-prs
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -e
+        echo "Fetching merged PRs from ${{ inputs.head-branch }} branch not in ${{ inputs.base-branch }}..."
+        
+        # Check if head branch exists
+        if ! git show-ref --verify --quiet refs/remotes/origin/${{ inputs.head-branch }}; then
+          echo "⚠️  ${{ inputs.head-branch }} branch not found. Using main branch as fallback."
+          HEAD_BRANCH="main"
+        else
+          HEAD_BRANCH="${{ inputs.head-branch }}"
+        fi
+        
+        # Check if base branch exists
+        if ! git show-ref --verify --quiet refs/remotes/origin/${{ inputs.base-branch }}; then
+          echo "❌ Base branch ${{ inputs.base-branch }} not found."
+          exit 1
+        fi
+        
+        echo "Using head branch: $HEAD_BRANCH"
+        echo "Using base branch: ${{ inputs.base-branch }}"
+        
+        # Get commits that are in head branch but not in base branch
+        COMMITS_NOT_IN_BASE=$(git log --oneline origin/$HEAD_BRANCH ^origin/${{ inputs.base-branch }} --merges --format="%H" 2>/dev/null || echo "")
+        
+        if [ -z "$COMMITS_NOT_IN_BASE" ]; then
+          echo "No merge commits found in $HEAD_BRANCH that are not in ${{ inputs.base-branch }}"
+          MERGED_PRS="*最近のマージ済みPRはありません*"
+        else
+          echo "Found merge commits not in base branch:"
+          echo "$COMMITS_NOT_IN_BASE"
+          
+          # Extract PR numbers from merge commits and get PR details
+          MERGED_PRS=""
+          for commit in $COMMITS_NOT_IN_BASE; do
+            # Get PR number from merge commit message
+            PR_NUMBER=$(git show --format="%s" $commit | grep -oE '#[0-9]+' | head -1 | sed 's/#//' || echo "")
+            
+            if [ -n "$PR_NUMBER" ]; then
+              echo "Processing PR #$PR_NUMBER"
+              
+              # Get PR details using GitHub CLI
+              PR_DETAILS=$(gh pr view $PR_NUMBER --json number,title,author,labels --jq '{number: .number, title: .title, author: .author.login, labels: [.labels[].name]}' 2>/dev/null || echo "")
+              
+              if [ -n "$PR_DETAILS" ]; then
+                # Parse PR details
+                PR_TITLE=$(echo "$PR_DETAILS" | jq -r '.title')
+                PR_AUTHOR=$(echo "$PR_DETAILS" | jq -r '.author')
+                PR_LABELS=$(echo "$PR_DETAILS" | jq -r '.labels | join(",")')
+                
+                # Check if PR should be excluded based on labels
+                SHOULD_EXCLUDE=false
+                if [ -n "${{ inputs.exclude-labels }}" ] && [ -n "$PR_LABELS" ]; then
+                  IFS=',' read -ra EXCLUDE_LABELS <<< "${{ inputs.exclude-labels }}"
+                  IFS=',' read -ra PR_LABELS_ARRAY <<< "$PR_LABELS"
+                  
+                  for exclude_label in "${EXCLUDE_LABELS[@]}"; do
+                    for pr_label in "${PR_LABELS_ARRAY[@]}"; do
+                      if [ "$exclude_label" = "$pr_label" ]; then
+                        SHOULD_EXCLUDE=true
+                        echo "Excluding PR #$PR_NUMBER due to label: $exclude_label"
+                        break 2
+                      fi
+                    done
+                  done
+                fi
+                
+                if [ "$SHOULD_EXCLUDE" = false ]; then
+                  # Format PR line with variables
+                  PR_LINE="- \$PR_NUMBER #$PR_NUMBER \$PR_TITLE $PR_TITLE \$PR_USER @$PR_AUTHOR"
+                  if [ -z "$MERGED_PRS" ]; then
+                    MERGED_PRS="$PR_LINE"
+                  else
+                    MERGED_PRS="$MERGED_PRS
+        $PR_LINE"
+                  fi
+                fi
+              fi
+            fi
+          done
+          
+          if [ -z "$MERGED_PRS" ]; then
+            MERGED_PRS="*最近のマージ済みPRはありません*"
+          fi
+        fi
+        
+        # Save the result 
+        echo "MERGED_PRS<<EOF" >> $GITHUB_OUTPUT
+        echo "$MERGED_PRS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo "Found merged PRs:"
+        echo "$MERGED_PRS"
+
+    - name: Update PR description
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -e
+        
+        # Get current PR description
+        CURRENT_BODY=$(gh pr view ${{ github.event.number }} --json body --jq '.body')
+        
+        # Create the merged PRs section
+        MERGED_PRS_SECTION="## ${{ inputs.head-branch }}ブランチからのマージ済みPR一覧
+        ${{ steps.get-merged-prs.outputs.MERGED_PRS }}"
+        
+        # Check if the placeholder exists
+        if echo "$CURRENT_BODY" | grep -q "<!-- MERGED_PRS_LIST -->"; then
+          echo "Updating existing merged PRs section..."
+          
+          # Replace the content between the markers
+          NEW_BODY=$(echo "$CURRENT_BODY" | sed '/<!-- MERGED_PRS_LIST -->/,/<!-- \/MERGED_PRS_LIST -->/c\
+        <!-- MERGED_PRS_LIST -->\
+        '"$MERGED_PRS_SECTION"'\
+        <!-- /MERGED_PRS_LIST -->')
+        else
+          echo "Adding merged PRs section to PR description..."
+          
+          # Add the section at the beginning of the body
+          NEW_BODY="$MERGED_PRS_SECTION
+
+        $CURRENT_BODY"
+        fi
+        
+        # Update the PR description
+        echo "$NEW_BODY" | gh pr edit ${{ github.event.number }} --body-file -
+        
+        echo "✅ PR description updated successfully!"
