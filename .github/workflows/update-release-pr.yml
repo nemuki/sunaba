@@ -26,6 +26,11 @@ jobs:
       (github.base_ref == 'release' || github.base_ref == 'release-v2')
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        
       - name: Update Release PR with Merged PRs
         uses: ./.github/actions/update-release-pr
         with:
