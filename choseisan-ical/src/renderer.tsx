@@ -121,6 +121,42 @@ button:active {
   margin-top: 5px;
   font-style: italic;
 }
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 20px;
+  border: 1px solid #c3e6cb;
+}
+
+.success-message h3 {
+  margin: 0 0 10px 0;
+  color: #155724;
+}
+
+.success-message p {
+  margin: 5px 0;
+  text-align: left;
+}
+
+.google-calendar-btn {
+  display: inline-block;
+  background-color: #4285f4;
+  color: white;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-top: 10px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.google-calendar-btn:hover {
+  background-color: #3367d6;
+  color: white;
+}
           `,
           }}
         />
@@ -141,6 +177,32 @@ document.addEventListener('DOMContentLoaded', function() {
   function clearErrors() {
     const errors = document.querySelectorAll('.error-message');
     errors.forEach(error => error.textContent = '');
+  }
+
+  function showSuccessMessage(filename) {
+    // Remove existing success message if any
+    const existingSuccess = document.querySelector('.success-message');
+    if (existingSuccess) {
+      existingSuccess.remove();
+    }
+
+    // Create success message
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.innerHTML = \`
+      <h3>✅ iCalファイルが生成されました！</h3>
+      <p><strong>ファイル名:</strong> \${filename}</p>
+      <p>ダウンロードされたファイルをダブルクリックするか、下のボタンでGoogleカレンダーに追加できます。</p>
+      <a href="https://calendar.google.com/calendar/u/0/r/settings/export" target="_blank" rel="noopener noreferrer" class="google-calendar-btn">
+        📅 Googleカレンダーにインポート
+      </a>
+    \`;
+
+    // Insert after form
+    const form = document.getElementById('chouseisan-form');
+    if (form && form.parentNode) {
+      form.parentNode.insertBefore(successDiv, form.nextSibling);
+    }
   }
 
   function showError(inputId, message) {
@@ -212,14 +274,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (response.ok) {
           const blob = await response.blob();
           const downloadUrl = window.URL.createObjectURL(blob);
+          const filename = response.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+          
+          // Download iCal file
           const a = document.createElement('a');
           a.style.display = 'none';
           a.href = downloadUrl;
-          a.download = response.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1] || 'calendar.ics';
+          a.download = filename;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(downloadUrl);
           document.body.removeChild(a);
+
+          // Show success message and Google Calendar link
+          showSuccessMessage(filename);
         } else {
           const errorData = await response.json();
           alert('エラー: ' + (errorData.error || '不明なエラーが発生しました。'));
